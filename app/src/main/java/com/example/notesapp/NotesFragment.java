@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,7 +17,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class NotesFragment extends Fragment {
     private NotesAdapter adapter;
@@ -42,6 +42,31 @@ public class NotesFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
+
+        // Attach ItemTouchHelper to RecyclerView
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeHelperCallback(getActivity()) {
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                if (direction == ItemTouchHelper.LEFT) {
+                    // Handle delete action
+                    Note note = noteList.get(position);
+                    DatabaseHelper.getInstance(getActivity()).deleteNote(note);
+                    noteList.remove(position);
+                    adapter.notifyItemRemoved(position);
+                } else if (direction == ItemTouchHelper.RIGHT) {
+                    // Handle edit action
+                    Note note = noteList.get(position);
+                    EditNoteFragment editNoteFragment = EditNoteFragment.newInstance(note.getId());
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, editNoteFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    adapter.notifyItemChanged(position); // Revert the swipe action
+                }
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         return view;
     }

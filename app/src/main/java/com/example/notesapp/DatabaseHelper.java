@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -48,8 +47,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void deleteNote(Note note) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("notes", "id = ?", new String[]{String.valueOf(note.getId())});
+        db.close();
+    }
+
+    public void updateNote(Note note) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("title", note.getTitle());
+        values.put("content", note.getContent());
+        db.update("notes", values, "id = ?", new String[]{String.valueOf(note.getId())});
+        db.close();
+    }
+
     @SuppressLint("Range")
-    public Collection<? extends Note> getAllNotes() {
+    public Note getNoteById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("notes", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            Note note = new Note();
+            note.setId(cursor.getInt(cursor.getColumnIndex("id")));
+            note.setTitle(cursor.getString(cursor.getColumnIndex("title")));
+            note.setContent(cursor.getString(cursor.getColumnIndex("content")));
+            cursor.close();
+            return note;
+        } else {
+            return null;
+        }
+    }
+
+    @SuppressLint("Range")
+    public List<Note> getAllNotes() {
         List<Note> notes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query("notes", null, null, null, null, null, "id DESC");
@@ -68,6 +99,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return notes;
     }
-
 }
-
