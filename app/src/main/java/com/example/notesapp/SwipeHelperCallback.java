@@ -74,4 +74,3 @@ public abstract class SwipeHelperCallback extends ItemTouchHelper.Callback {
         }
     }
 }
-
